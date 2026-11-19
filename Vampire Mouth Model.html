@@ -265,17 +265,17 @@ function toothGeo(kind,w,t,len,f){
     var hx,hz,zo=0,n=2.4;
     if(kind==='incisor'){
       n=3;
-      hx=w/2*(0.74+0.26*sstep(0,0.55,u))*(u>0.9?1-0.14*Math.pow((u-0.9)/0.1,2):1);
+      hx=w/2*(0.86+0.14*sstep(0,0.45,u))*(u>0.9?1-0.14*Math.pow((u-0.9)/0.1,2):1);
       hz=Math.max(0.045,t/2*(1-0.82*Math.pow(u,1.2)));
       zo=0.05*Math.sin(PI*u);
     }else if(kind==='canine'){
       n=2.2;
-      hx=w/2*(0.78+0.30*Math.sin(PI*Math.pow(u,0.75)))*Math.pow(1-Math.pow(u,2.5),0.55);
+      hx=w/2*(0.88+0.16*Math.sin(PI*Math.pow(u,0.75)))*Math.pow(1-Math.pow(u,2.5),0.55);
       hz=t/2*(0.95+0.10*Math.sin(PI*u))*Math.pow(1-Math.pow(u,2.2),0.6);
     }else if(kind==='molar'){
       n=3.2;
       var cap=u<0.72?1:Math.sqrt(1-0.8*Math.pow((u-0.72)/0.28,2));
-      hx=w/2*(0.82+0.18*sstep(0,0.4,u))*cap;
+      hx=w/2*(0.88+0.12*sstep(0,0.4,u))*cap;
       hz=t/2*(0.84+0.16*sstep(0,0.4,u))*cap;
     }else{ /* fang: a full-width canine crown whose sides run in near-straight lines to the point */
       n=2.5;
@@ -283,12 +283,12 @@ function toothGeo(kind,w,t,len,f){
       var uu=Math.max(0,(u-shoulder)/(1-shoulder));      /* 0 at shoulder, 1 at tip */
       var ex=0.65+0.75*f.point;                          /* <1 rounded sides, 1 straight, >1 needle-like */
       var taper=Math.pow(1-uu,ex);
-      var body=0.84+0.20*sstep(0,0.25,u);
+      var body=0.92+0.12*sstep(0,0.25,u);
       hx=f.thick*w/2*body*taper;
       hz=f.thick*t/2*body*Math.pow(1-uu,ex*0.8)*(1-0.25*u); /* flatter front face toward the tip */
       zo=-f.curve*len*u*u*0.55 + 0.04*Math.sin(PI*u);
     }
-    if(v*tot<root){ var k=0.8+0.2*(v*tot/root); hx*=k; hz*=k; }
+    if(v*tot<root){ var k=0.88+0.12*(v*tot/root); hx*=k; hz*=k; }
     if(last){ hx=0; hz=0; }
     var e=2/n;
     TC.copy(TOOTH_NECK).lerp(TOOTH_BODY,sstep(0,0.35,u));
@@ -316,11 +316,11 @@ function gumGeo(arch,bounds,cy,dir){
   for(i=0;i<=NR;i++){
     var s=-S+2*S*i/NR, p=arch.at(s), endK=Math.sqrt(Math.max(0,1-Math.pow(Math.abs(s)/S,10)));
     var db=1e9; for(k=0;k<bounds.length;k++) db=Math.min(db,Math.abs(s-bounds[k]));
-    var pap=Math.exp(-Math.pow(db/0.13,2));
+    var pap=Math.exp(-Math.pow(db/0.15,2));
     var rz=(0.45+0.24*sstep(0.35,0.9,Math.abs(s)/S))*endK;
     for(k=0;k<NS;k++){
       var ph=2*PI*k/NS, sn=Math.sin(ph), oz=rz*Math.cos(ph), oy=ry*sn*endK;
-      if(sn*dir>0) oy+=dir*0.22*pap*sn*sn*endK;
+      if(sn*dir>0) oy+=dir*0.32*pap*sn*sn*endK;
       pos.push(p.x+p.nx*oz, cy+oy, p.z+p.nz*oz);
     }
   }
@@ -386,6 +386,7 @@ cavTop.renderOrder=cavLow.renderOrder=-1;
 /* ---------- teeth (rebuilt whenever the fang settings change) ---------- */
 var state={on:true,uC:true,uL:false,uI:false,lC:false,len:1.9,thick:1,curve:0.35,point:0.6,splay:4,tilt:0,jaw:13,lift:0.6,drop:0.3,corners:0,width:0,sneer:0,skin:true};
 var toothMeshes=[];
+var FIT={incisor:1.10,canine:1.08,molar:1.05}; /* >1 = teeth slightly wider than their slot, so neighbours touch like real teeth */
 function buildTeeth(){
   var i;
   for(i=0;i<toothMeshes.length;i++){ toothMeshes[i].parent.remove(toothMeshes[i]); toothMeshes[i].geometry.dispose(); }
@@ -397,8 +398,8 @@ function buildTeeth(){
         var p=arch.at(side*t.s), geo;
         if(fang){
           var L=Math.max(t.len,upper?state.len:state.len*0.55);
-          geo=toothGeo('fang',t.w,Math.max(t.t,0.66),L,state);
-        }else geo=toothGeo(t.kind,t.w,t.t,t.len,null);
+          geo=toothGeo('fang',t.w*FIT.canine,Math.max(t.t,0.66),L,state);
+        }else geo=toothGeo(t.kind,t.w*FIT[t.kind],t.t,t.len,null);
         var m=new THREE.Mesh(geo,toothMat);
         m.castShadow=true; m.receiveShadow=true;
         m.position.set(p.x,gumY,p.z);
@@ -593,7 +594,7 @@ var PRESETS={
   natural:{uC:1,uL:0,uI:0,lC:0,len:14,thick:112,curve:10,point:55,splay:2,tilt:3},
   classic:{uC:1,uL:0,uI:0,lC:0,len:19,thick:100,curve:35,point:60,splay:4,tilt:0},
   subtle:{uC:1,uL:0,uI:0,lC:0,len:13,thick:95,curve:20,point:50,splay:2,tilt:0},
-  rat:{uC:0,uL:0,uI:1,lC:0,len:24,thick:70,curve:15,point:88,splay:0,tilt:4},
+  rat:{uC:0,uL:0,uI:1,lC:0,len:24,thick:85,curve:15,point:88,splay:0,tilt:4},
   feral:{uC:1,uL:1,uI:0,lC:1,len:23,thick:112,curve:55,point:72,splay:8,tilt:6}
 };
 document.querySelectorAll('[data-preset]').forEach(function(btn){
