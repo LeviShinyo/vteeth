@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vampire Mouth Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: 3D viewport fills the left, a fixed control rail sits on the right; stacks on phones */
+  --bg:#150c0e;
+  --panel:#1f1417;
+  --line:#3b262a;
+  --text:#ecdfd6;
+  --muted:#a8918c;
+  --accent:#c8323f;
+  --bone:#e8dcc4;
+  --display:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;height:100%}
+.stage{position:relative;min-height:0;min-width:0;
+  background:radial-gradient(ellipse at 50% 42%,#3a1f24 0%,#1d1013 55%,#110a0b 100%)}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage canvas:active{cursor:grabbing}
+.hint{position:absolute;left:16px;bottom:14px;color:var(--muted);font-size:12px;pointer-events:none}
+.fail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted)}
+.rail{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:20px 20px 28px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.05;margin:0;color:var(--bone);text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0;font-size:13px}
+section{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0;color:var(--bone)}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.row label{color:var(--text)}
+.row output{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.row input[type=range]{grid-column:1 / -1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--bone);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent);margin-top:-6px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--bone);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent)}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);font-size:13px}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch .track{width:40px;height:22px;border-radius:11px;background:var(--line);position:relative;transition:background .15s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(18px);background:var(--bone)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.check{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:13px}
+.check input{accent-color:var(--accent);width:15px;height:15px;margin:0;flex:none}
+.check:has(input:checked){border-color:var(--accent);background:rgba(200,50,63,.10)}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.presets.three{grid-template-columns:1fr 1fr 1fr}
+button{font:inherit;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer;text-align:center}
+button:hover{border-color:var(--muted)}
+button[aria-pressed=true]{border-color:var(--accent);color:var(--bone);background:rgba(200,50,63,.14)}
+:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+.switch input:focus-visible + .track{outline:2px solid var(--bone);outline-offset:2px}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
+fieldset:disabled{opacity:.4}
+legend{padding:0;color:var(--muted);font-size:12px;margin-bottom:8px}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:52% minmax(0,1fr)}
+  .rail{border-left:0;border-top:1px solid var(--line);padding:16px 16px 24px}
+  h1{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){.switch .track,.switch .track::after{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="view" aria-label="3D model of a mouth with adjustable fangs"></canvas>
+    <div class="hint">Drag to orbit. Scroll or pinch to zoom.</div>
+    <div class="fail" id="fail">The 3D library did not load, so the model cannot be drawn. Reload the page to try again.</div>
+  </div>
+
+  <aside class="rail">
+    <header>
+      <h1>Vampire Mouth</h1>
+      <p class="sub">Lips, gums, teeth, tongue and a hinged jaw, with a fang set you can switch on and shape.</p>
+    </header>
+
+    <section>
+      <div class="head">
+        <h2>Fangs</h2>
+        <label class="switch"><span id="fangState">On</span><input type="checkbox" id="fangsOn" checked><span class="track"></span></label>
+      </div>
+      <fieldset id="fangFields">
+        <div>
+          <legend>Teeth that become fangs</legend>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="pUC" checked>Upper canines</label>
+            <label class="check"><input type="checkbox" id="pUL">Upper laterals</label>
+            <label class="check"><input type="checkbox" id="pUI">Upper centrals</label>
+            <label class="check"><input type="checkbox" id="pLC">Lower canines</label>
+          </div>
+        </div>
+        <div class="row"><label for="fLen">Length</label><output id="oLen" for="fLen"></output><input type="range" id="fLen" min="9.5" max="40" step="0.5" value="19"></div>
+        <div class="row"><label for="fThick">Thickness</label><output id="oThick" for="fThick"></output><input type="range" id="fThick" min="60" max="140" step="1" value="100"></div>
+        <div class="row"><label for="fCurve">Backward curve</label><output id="oCurve" for="fCurve"></output><input type="range" id="fCurve" min="0" max="100" step="1" value="35"></div>
+        <div class="row"><label for="fPoint">Point</label><output id="oPoint" for="fPoint"></output><input type="range" id="fPoint" min="0" max="100" step="1" value="60"></div>
+        <div class="row"><label for="fSplay">Splay outward</label><output id="oSplay" for="fSplay"></output><input type="range" id="fSplay" min="-10" max="25" step="0.5" value="4"></div>
+        <div class="row"><label for="fTilt">Forward tilt</label><output id="oTilt" for="fTilt"></output><input type="range" id="fTilt" min="-10" max="25" step="0.5" value="0"></div>
+        <div>
+          <legend>Presets</legend>
+          <div class="presets">
+            <button type="button" data-preset="classic" aria-pressed="true">Classic</button>
+            <button type="button" data-preset="subtle" aria-pressed="false">Subtle</button>
+            <button type="button" data-preset="rat" aria-pressed="false">Rat-toothed</button>
+            <button type="button" data-preset="feral" aria-pressed="false">Feral</button>
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>Pose</h2>
+      <div class="presets three">
+        <button type="button" data-pose="closed" aria-pressed="false">Closed</button>
+        <button type="button" data-pose="parted" aria-pressed="false">Parted</button>
+        <button type="button" data-pose="smile" aria-pressed="false">Smile</button>
+        <button type="button" data-pose="grin" aria-pressed="false">Grin</button>
+        <button type="button" data-pose="frown" aria-pressed="false">Frown</button>
+        <button type="button" data-pose="sneer" aria-pressed="false">Sneer</button>
+        <button type="button" data-pose="snarl" aria-pressed="false">Snarl</button>
+        <button type="button" data-pose="bared" aria-pressed="true">Bared</button>
+        <button type="button" data-pose="hiss" aria-pressed="false">Hiss</button>
+      </div>
+      <div class="row"><label for="jaw">Jaw opening</label><output id="oJaw" for="jaw"></output><input type="range" id="jaw" min="0" max="30" step="0.5" value="13"></div>
+      <div class="row"><label for="lift">Upper lip lift</label><output id="oLift" for="lift"></output><input type="range" id="lift" min="0" max="12" step="0.5" value="6"></div>
+      <div class="row"><label for="drop">Lower lip drop</label><output id="oDrop" for="drop"></output><input type="range" id="drop" min="0" max="10" step="0.5" value="3"></div>
+      <div class="row"><label for="corners">Mouth corners</label><output id="oCorners" for="corners"></output><input type="range" id="corners" min="-9" max="9" step="0.5" value="0"></div>
+      <div class="row"><label for="width">Mouth width</label><output id="oWidth" for="width"></output><input type="range" id="width" min="-7" max="8" step="0.5" value="0"></div>
+      <div class="row"><label for="sneer">Sneer</label><output id="oSneer" for="sneer"></output><input type="range" id="sneer" min="-100" max="100" step="5" value="0"></div>
+    </section>
+
+    <section>
+      <h2>View</h2>
+      <div class="head">
+        <span>Lips and skin</span>
+        <label class="switch"><span id="skinState">Shown</span><input type="checkbox" id="skinOn" checked><span class="track"></span></label>
+      </div>
+      <button type="button" id="resetView">Reset camera</button>
+    </section>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+if(!window.THREE){ $('fail').style.display='flex'; return; }
+
+/* ---------- helpers ---------- */
+var PI=Math.PI;
+function lin(hex){ return new THREE.Color(hex).convertSRGBToLinear(); }
+function sstep(a,b,x){ var t=Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); }
+function spow(c,e){ return (c<0?-1:1)*Math.pow(Math.abs(c),e); }
+
+/* ---------- renderer, scene, camera ---------- */
+var canvas=$('view'), stage=$('stage');
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.95;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(30,1,0.5,200);
+var HOME=new THREE.Vector3(3.5,0.6,21), TARGET=new THREE.Vector3(0,-0.7,3.2);
+camera.position.copy(HOME);
+var controls=new THREE.OrbitControls(camera,canvas);
+controls.target.copy(TARGET);
+controls.enableDamping=true; controls.dampingFactor=0.08;
+controls.enablePan=false; controls.minDistance=7; controls.maxDistance=45;
+
+scene.add(new THREE.HemisphereLight(0xfff1e6,0x2a1216,0.55));
+var key=new THREE.DirectionalLight(0xfff4ea,1.15);
+key.position.set(4,9,16); key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-8; key.shadow.camera.right=8; key.shadow.camera.top=8; key.shadow.camera.bottom=-8;
+key.shadow.camera.near=1; key.shadow.camera.far=45;
+key.shadow.bias=-0.0006; key.shadow.normalBias=0.03; key.shadow.radius=3;
+scene.add(key);
+var fill=new THREE.DirectionalLight(0xc8d4ff,0.28); fill.position.set(-10,-2,8); scene.add(fill);
+var rim=new THREE.DirectionalLight(0xff9a8a,0.25); rim.position.set(0,-8,6); scene.add(rim);
+
+/* ---------- materials ---------- */
+var toothMat=new THREE.MeshPhysicalMaterial({color:lin('#efe5d0'),roughness:0.22,metalness:0,clearcoat:0.7,clearcoatRoughness:0.25});
+var gumMat=new THREE.MeshPhysicalMaterial({color:lin('#b24e5b'),roughness:0.35,clearcoat:0.5,clearcoatRoughness:0.3,side:THREE.DoubleSide});
+var palateMat=new THREE.MeshStandardMaterial({color:lin('#93414d'),roughness:0.5,side:THREE.DoubleSide});
+var tongueMat=new THREE.MeshPhysicalMaterial({color:lin('#b04a58'),roughness:0.42,clearcoat:0.35,clearcoatRoughness:0.4});
+var lipMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.34,clearcoat:0.35,clearcoatRoughness:0.35});
+var skinMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.62});
+var mucosaMat=new THREE.MeshStandardMaterial({color:lin('#7a2a36'),roughness:0.5,side:THREE.BackSide});
+var voidMat=new THREE.MeshBasicMaterial({color:lin('#1d0609'),side:THREE.BackSide});
+
+/* ---------- dental arch (half ellipse, measured by arc length, units = cm) ---------- */
+function makeArch(a,b){
+  var N=700, tmax=1.95, len=[0], px=0, pz=b, i;
+  for(i=1;i<=N;i++){ var t=tmax*i/N, x=a*Math.sin(t), z=b*Math.cos(t); len[i]=len[i-1]+Math.hypot(x-px,z-pz); px=x; pz=z; }
+  var quarter=len[Math.round(N*(PI/2)/tmax)];
+  function at(s){
+    var sg=s<0?-1:1, d=Math.min(Math.abs(s),len[N]-1e-4), lo=0, hi=N;
+    while(hi-lo>1){ var m=(lo+hi)>>1; if(len[m]<=d) lo=m; else hi=m; }
+    var f=(d-len[lo])/(len[hi]-len[lo]), t=tmax*(lo+f)/N;
+    var x=sg*a*Math.sin(t), z=b*Math.cos(t), nx=x/(a*a), nz=z/(b*b), n=Math.hypot(nx,nz);
+    return {x:x,z:z,nx:nx/n,nz:nz/n};
+  }
+  return {a:a,b:b,quarter:quarter,at:at};
+}
+var upperArch=makeArch(2.7,4.4), lowerArch=makeArch(2.5,4.05);
+
+/* tooth tables: kind, width, labio-lingual thickness, visible crown length */
+var UPPER=[['incisor',0.86,0.70,0.90],['incisor',0.66,0.60,0.80],['canine',0.76,0.80,0.96],['molar',0.70,0.90,0.84],['molar',0.68,0.92,0.84],['molar',1.02,1.08,0.84],['molar',0.96,1.04,0.82]];
+var LOWER=[['incisor',0.54,0.56,0.90],['incisor',0.60,0.58,0.90],['canine',0.70,0.74,0.92],['molar',0.70,0.82,0.76],['molar',0.72,0.86,0.75],['molar',1.06,1.00,0.73],['molar',1.00,0.98,0.72]];
+var UPPER_GUM_Y=0.90, LOWER_GUM_Y=-0.75;
+
+function layout(table,arch){
+  var sum=0,i; for(i=0;i<table.length;i++) sum+=table[i][1];
+  var k=arch.quarter/sum, cum=0, out=[], bounds=[0];
+  for(i=0;i<table.length;i++){
+    var w=table[i][1]*k;
+    out.push({idx:i,kind:table[i][0],w:w,t:table[i][2],len:table[i][3],s:cum+w/2});
+    cum+=w; bounds.push(cum); bounds.push(-cum);
+  }
+  return {teeth:out,bounds:bounds};
+}
+var upperLay=layout(UPPER,upperArch), lowerLay=layout(LOWER,lowerArch);
+
+/* ---------- one tooth: stacked superellipse rings from root to tip ---------- */
+function toothGeo(kind,w,t,len,f){
+  var R=28,S=24,root=0.4,tot=root+len,pos=[],idx=[],i,j;
+  for(i=0;i<=R;i++){
+    var last=(i===R), v=last?1:i/(R-1);
+    var y=root-v*tot, u=Math.max(0,(v*tot-root)/len);
+    var hx,hz,zo=0,n=2.4;
+    if(kind==='incisor'){
+      n=3;
+      hx=w/2*(0.74+0.26*sstep(0,0.55,u))*(u>0.9?1-0.14*Math.pow((u-0.9)/0.1,2):1);
+      hz=Math.max(0.045,t/2*(1-0.82*Math.pow(u,1.2)));
+      zo=0.05*Math.sin(PI*u);
+    }else if(kind==='canine'){
+      n=2.2;
+      hx=w/2*(0.78+0.30*Math.sin(PI*Math.pow(u,0.75)))*Math.pow(1-Math.pow(u,2.5),0.55);
+      hz=t/2*(0.95+0.10*Math.sin(PI*u))*Math.pow(1-Math.pow(u,2.2),0.6);
+    }else if(kind==='molar'){
+      n=3.2;
+      var cap=u<0.72?1:Math.sqrt(1-0.8*Math.pow((u-0.72)/0.28,2));
+      hx=w/2*(0.82+0.18*sstep(0,0.4,u))*cap;
+      hz=t/2*(0.84+0.16*sstep(0,0.4,u))*cap;
+    }else{ /* fang */
+      n=2.1;
+      var tipLen=Math.min(len*0.9,0.55+1.1*f.point), q=Math.min(1,(1-u)*len/tipLen), uu=1-q;
+      var taper=Math.pow(1-Math.pow(uu,2.6-1.2*f.point),0.55+0.5*f.point);
+      var body=0.86+0.18*sstep(0,0.28,u*len)-0.06*sstep(0.3,1,u);
+      hx=f.thick*w/2*body*taper;
+      hz=f.thick*t/2*body*taper*(1-0.10*u);
+      zo=-f.curve*len*u*u*0.55;
+    }
+    if(v*tot<root){ var k=0.8+0.2*(v*tot/root); hx*=k; hz*=k; }
+    if(last){ hx=0; hz=0; }
+    var e=2/n;
+    for(j=0;j<S;j++){
+      var ph=2*PI*j/S;
+      pos.push(hx*spow(Math.cos(ph),e), y, hz*spow(Math.sin(ph),e)+zo);
+    }
+  }
+  for(i=0;i<R;i++) for(j=0;j<S;j++){
+    var a=i*S+j, b=i*S+(j+1)%S, c=(i+1)*S+j, d=(i+1)*S+(j+1)%S;
+    idx.push(a,b,c,b,d,c);
+  }
+  var g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+/* ---------- gum ridge: tube swept along the arch with scalloped margin ---------- */
+function gumGeo(arch,bounds,cy,dir){
+  var NR=180,NS=18,S=arch.quarter+0.28,ry=0.6,pos=[],idx=[],i,k;
+  for(i=0;i<=NR;i++){
+    var s=-S+2*S*i/NR, p=arch.at(s), endK=Math.sqrt(Math.max(0,1-Math.pow(Math.abs(s)/S,10)));
+    var db=1e9; for(k=0;k<bounds.length;k++) db=Math.min(db,Math.abs(s-bounds[k]));
+    var pap=Math.exp(-Math.pow(db/0.13,2));
+    var rz=(0.45+0.24*sstep(0.35,0.9,Math.abs(s)/S))*endK;
+    for(k=0;k<NS;k++){
+      var ph=2*PI*k/NS, sn=Math.sin(ph), oz=rz*Math.cos(ph), oy=ry*sn*endK;
+      if(sn*dir>0) oy+=dir*0.22*pap*sn*sn*endK;
+      pos.push(p.x+p.nx*oz, cy+oy, p.z+p.nz*oz);
+    }
+  }
+  for(i=0;i<NR;i++) for(k=0;k<NS;k++){
+    var a=i*NS+k, b=i*NS+(k+1)%NS, c=(i+1)*NS+k, d=(i+1)*NS+(k+1)%NS;
+    idx.push(a,b,c,b,d,c);
+  }
+  var g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+/* ---------- palate / mouth floor: dome over the inside of the arch ---------- */
+function domeGeo(arch,y0,h){
+  var NR=12,NT=56,pos=[0,y0+h,0.4],idx=[],i,j;
+  for(i=1;i<=NR;i++){
+    var r=i/NR;
+    for(j=0;j<NT;j++){
+      var th=2*PI*j/NT, c=Math.cos(th);
+      pos.push((arch.a-0.25)*r*Math.sin(th), y0+h*Math.sqrt(Math.max(0,1-r*r)), (c>0?arch.b-0.25:1.8)*r*c+0.4*(1-r));
+    }
+  }
+  for(j=0;j<NT;j++) idx.push(0,1+j,1+(j+1)%NT);
+  for(i=0;i<NR-1;i++) for(j=0;j<NT;j++){
+    var a=1+i*NT+j, b=1+i*NT+(j+1)%NT, c=1+(i+1)*NT+j, d=1+(i+1)*NT+(j+1)%NT;
+    idx.push(a,b,c,b,d,c);
+  }
+  var g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+/* ---------- assemble skull side (fixed) and jaw side (hinged) ---------- */
+var PIVOT=new THREE.Vector3(0,3.0,-3.2);
+var upperGroup=new THREE.Group(); scene.add(upperGroup);
+var jaw=new THREE.Group(); jaw.position.copy(PIVOT); scene.add(jaw);
+var lowerGroup=new THREE.Group(); lowerGroup.position.copy(PIVOT).multiplyScalar(-1); jaw.add(lowerGroup);
+
+function addMesh(parent,geo,mat,cast){ var m=new THREE.Mesh(geo,mat); m.receiveShadow=true; m.castShadow=!!cast; parent.add(m); return m; }
+addMesh(upperGroup,gumGeo(upperArch,upperLay.bounds,UPPER_GUM_Y+0.6,-1),gumMat,true);
+addMesh(lowerGroup,gumGeo(lowerArch,lowerLay.bounds,LOWER_GUM_Y-0.6,1),gumMat,true);
+addMesh(upperGroup,domeGeo(upperArch,UPPER_GUM_Y+0.15,1.0),palateMat,false);
+addMesh(lowerGroup,domeGeo(lowerArch,LOWER_GUM_Y-0.55,-0.3),palateMat,false);
+
+(function(){ /* tongue */
+  var g=new THREE.SphereGeometry(1,40,28), p=g.attributes.position, i;
+  for(i=0;i<p.count;i++){
+    var x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+    var k=z>0?1-0.32*z*z:1;
+    var Y=y*0.5 - (y>0?0.10*Math.exp(-Math.pow(x/0.2,2)):0) - 0.14*Math.pow(Math.max(0,z),2);
+    p.setXYZ(i, x*1.72*k, Y, z*2.7);
+  }
+  g.computeVertexNormals();
+  var m=addMesh(lowerGroup,g,tongueMat,false); m.position.set(0,-0.98,0.95);
+})();
+
+var cavTop=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),voidMat); cavTop.scale.set(3.3,2.2,4.0); cavTop.position.set(0,-0.1,0.6); scene.add(cavTop);
+var cavLow=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),voidMat); cavLow.scale.set(3.0,1.7,3.8); cavLow.position.set(0,-1.3,0.7); lowerGroup.add(cavLow);
+
+/* ---------- teeth (rebuilt whenever the fang settings change) ---------- */
+var state={on:true,uC:true,uL:false,uI:false,lC:false,len:1.9,thick:1,curve:0.35,point:0.6,splay:4,tilt:0,jaw:13,lift:0.6,drop:0.3,corners:0,width:0,sneer:0,skin:true};
+var toothMeshes=[];
+function buildTeeth(){
+  var i;
+  for(i=0;i<toothMeshes.length;i++){ toothMeshes[i].parent.remove(toothMeshes[i]); toothMeshes[i].geometry.dispose(); }
+  toothMeshes=[];
+  function row(lay,arch,parent,gumY,upper){
+    lay.teeth.forEach(function(t){
+      var fang=state.on && (upper ? ((t.idx===2&&state.uC)||(t.idx===1&&state.uL)||(t.idx===0&&state.uI)) : (t.idx===2&&state.lC));
+      [-1,1].forEach(function(side){
+        var p=arch.at(side*t.s), geo;
+        if(fang){
+          var L=Math.max(t.len,upper?state.len:state.len*0.55);
+          geo=toothGeo('fang',Math.min(t.w,0.74),Math.max(t.t,0.66),L,state);
+        }else geo=toothGeo(t.kind,t.w,t.t,t.len,null);
+        var m=new THREE.Mesh(geo,toothMat);
+        m.castShadow=true; m.receiveShadow=true;
+        m.position.set(p.x,gumY,p.z);
+        m.rotation.order='YZX';
+        m.rotation.y=Math.atan2(p.nx,p.nz);
+        if(fang){
+          var flip=upper?1:-1;
+          m.rotation.z=THREE.MathUtils.degToRad(state.splay)*side*flip;
+          m.rotation.x=-THREE.MathUtils.degToRad(state.tilt)*flip;
+        }
+        if(!upper) m.scale.y=-1;
+        parent.add(m); toothMeshes.push(m);
+      });
+    });
+  }
+  row(upperLay,upperArch,upperGroup,UPPER_GUM_Y,true);
+  row(lowerLay,lowerArch,lowerGroup,LOWER_GUM_Y,false);
+}
+
+/* ---------- lips and lower face: one sheet radiating from the mouth opening ---------- */
+var NA=160,NL=12,NSK=16,K=NL+1+NSK,PH0=-1.25;
+var LW=2.55,YL=0.2,FW=5.2,FU=2.25,FD=4.7;
+function faceZ(x,y){
+  var yy=y-YL, z=5.35-0.26*x*x;
+  if(yy<0){
+    var d=-yy;
+    z-=0.42*Math.exp(-Math.pow((d-1.55)/0.55,2))*Math.exp(-Math.pow(x/2.2,2));
+    z+=0.60*Math.exp(-Math.pow((d-3.0)/0.95,2))*Math.exp(-Math.pow(x/1.7,2));
+    z-=1.5*sstep(3.5,4.8,d);
+  }else{
+    z-=0.11*Math.exp(-Math.pow(x/0.3,2))*sstep(0.45,1.0,yy)*(1-0.5*sstep(1.6,2.2,yy));
+    z+=0.40*sstep(1.3,2.25,yy)*Math.exp(-Math.pow(x/1.5,2));
+  }
+  return z;
+}
+var skinGeo=new THREE.BufferGeometry(), skinRest=new Float32Array(NA*K*3), skinMeta=new Float32Array(NA*K*3), skinCW=new Float32Array(NA*K);
+(function(){
+  var col=new Float32Array(NA*K*3), cSkin=lin('#cfbcb4'), cRosy=lin('#c29a95'), cLip=lin('#7e2633'), cIn=lin('#561520'), tmp=new THREE.Color();
+  var j,k,m,o;
+  for(j=0;j<NA;j++){
+    var al=2*PI*j/NA, ca=Math.cos(al), sa=Math.sin(al), up=sa>=0, s=Math.abs(sa);
+    var Ax=LW*ca, Ay=YL+0.015*sa, Bx=FW*ca, By=YL+(up?FU:FD)*sa;
+    var dx=Bx-Ax, dy=By-Ay, D=Math.hypot(dx,dy); dx/=D; dy/=D;
+    var lw=up ? 0.68*Math.pow(s,0.55)*(1-0.22*Math.exp(-Math.pow(Ax/0.3,2))+0.10*Math.exp(-Math.pow((Math.abs(Ax)-0.8)/0.45,2)))
+              : 0.92*Math.pow(s,0.5);
+    lw=Math.max(0.04,lw);
+    var Lt=0.03+(up?0.40:0.50)*Math.pow(s,0.45);
+    var sideSign=up?1:-1, swLip=Math.pow(s,0.7), wjLip=Math.pow(s,0.55), soft=s*s*(3-2*s);
+    function put(kk,x,y,z,fall,c,far,dist){
+      skinCW[j*K+kk]=Math.pow(Math.abs(ca),2.2)*Math.exp(-dist/2.4);
+      var sw=swLip+(soft-swLip)*far, wj=up?0:wjLip+(soft-wjLip)*far;
+      o=(j*K+kk)*3;
+      skinRest[o]=x; skinRest[o+1]=y; skinRest[o+2]=z;
+      skinMeta[o]=sideSign*sw*fall; skinMeta[o+1]=wj; skinMeta[o+2]=up?1:0;
+      col[o]=c.r; col[o+1]=c.g; col[o+2]=c.b;
+    }
+    for(k=0;k<=NL;k++){
+      var ph=PH0+(PI-PH0)*k/NL, back=ph<0;
+      var off=lw*(1-Math.cos(ph))/2*(back?0.6:1), zb=Lt*Math.sin(ph)*(back?0.7:1);
+      var x=Ax+dx*off, y=Ay+dy*off;
+      if(back) tmp.copy(cIn); else tmp.copy(cIn).lerp(cLip,sstep(0,0.55,ph));
+      if(k===NL) tmp.copy(cLip).lerp(cRosy,0.6);
+      put(k,x,y,faceZ(x,y)+zb,1,tmp,0,off);
+    }
+    for(m=1;m<=NSK;m++){
+      var f=Math.pow(m/NSK,1.5), d=lw+(D-lw)*f, x2=Ax+dx*d, y2=Ay+dy*d;
+      tmp.copy(cRosy).lerp(cSkin,sstep(0,0.5,d-lw));
+      put(NL+m,x2,y2,faceZ(x2,y2),Math.exp(-(d-lw)/1.7),tmp,sstep(0,1.4,d-lw),d);
+    }
+  }
+  var lipIdx=[],skinIdx=[];
+  for(j=0;j<NA;j++) for(k=0;k<K-1;k++){
+    var j2=(j+1)%NA, a=j*K+k, b=j2*K+k, c=j*K+k+1, dd=j2*K+k+1;
+    (k<NL?lipIdx:skinIdx).push(a,b,c,b,dd,c);
+  }
+  skinGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(NA*K*3),3));
+  skinGeo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  skinGeo.setIndex(lipIdx.concat(skinIdx));
+  skinGeo.addGroup(0,lipIdx.length,0);
+  skinGeo.addGroup(lipIdx.length,skinIdx.length,1);
+})();
+var skinFront=new THREE.Mesh(skinGeo,[lipMat,skinMat]); skinFront.castShadow=true; skinFront.receiveShadow=true; scene.add(skinFront);
+var skinBack=new THREE.Mesh(skinGeo,[mucosaMat,mucosaMat]); scene.add(skinBack);
+
+function poseSkin(){
+  var pos=skinGeo.attributes.position.array, th=THREE.MathUtils.degToRad(state.jaw), c=Math.cos(th), s=Math.sin(th);
+  var cy=PIVOT.y, cz=PIVOT.z, i, n=NA*K;
+  for(i=0;i<n;i++){
+    var o=i*3, x=skinRest[o], y=skinRest[o+1], z=skinRest[o+2], w=skinMeta[o], wj=skinMeta[o+1];
+    if(skinMeta[o+2]===1){ y+=state.lift*w*(1+state.sneer*Math.max(-1,Math.min(1,x/1.8))); }
+    else{
+      y+=state.drop*w;
+      var ry=cy+(y-cy)*c-(z-cz)*s, rz=cz+(y-cy)*s+(z-cz)*c;
+      y+=(ry-y)*wj; z+=(rz-z)*wj;
+    }
+    var cw=skinCW[i], sx=x<0?-1:1;
+    y+=state.corners*cw;
+    z-=0.52*Math.abs(x)*state.width*cw+0.25*Math.abs(state.corners)*cw;
+    x+=sx*state.width*cw;
+    pos[o]=x; pos[o+1]=y; pos[o+2]=z;
+  }
+  skinGeo.attributes.position.needsUpdate=true;
+  skinGeo.computeVertexNormals();
+  skinGeo.computeBoundingSphere();
+}
+function pose(){ jaw.rotation.x=THREE.MathUtils.degToRad(state.jaw); poseSkin(); }
+
+/* make sure the sheet faces outward, whatever the winding came out as */
+pose();
+(function(){
+  var probe=(Math.round(NA/4)*K+NL+4)*3+2;
+  if(skinGeo.attributes.normal.array[probe]<0){
+    var ix=skinGeo.index.array, i, t;
+    for(i=0;i<ix.length;i+=3){ t=ix[i+1]; ix[i+1]=ix[i+2]; ix[i+2]=t; }
+    skinGeo.index.needsUpdate=true; skinGeo.computeVertexNormals();
+  }
+})();
+buildTeeth();
+
+/* ---------- controls ---------- */
+function showSkin(){
+  skinFront.visible=skinBack.visible=cavTop.visible=cavLow.visible=state.skin;
+  controls.minAzimuthAngle=state.skin?-1.9:-Infinity;
+  controls.maxAzimuthAngle=state.skin?1.9:Infinity;
+  controls.minPolarAngle=state.skin?0.5:0;
+  controls.maxPolarAngle=state.skin?2.5:PI;
+  $('skinState').textContent=state.skin?'Shown':'Hidden';
+}
+var fmt={
+  fLen:function(v){return (+v).toFixed(1)+' mm';}, fThick:function(v){return v+'%';}, fCurve:function(v){return v+'%';},
+  fPoint:function(v){return v<34?'Blunt':v<67?'Sharp':'Needle';}, fSplay:function(v){return (+v).toFixed(1)+'°';},
+  fTilt:function(v){return (+v).toFixed(1)+'°';}, jaw:function(v){return (+v).toFixed(1)+'°';},
+  lift:function(v){return (+v).toFixed(1)+' mm';}, drop:function(v){return (+v).toFixed(1)+' mm';},
+  corners:function(v){v=+v;return v===0?'Level':(v>0?'Up ':'Down ')+Math.abs(v).toFixed(1)+' mm';},
+  width:function(v){v=+v;return v===0?'Neutral':(v>0?'Wide ':'Narrow ')+Math.abs(v).toFixed(1)+' mm';},
+  sneer:function(v){v=+v;return v===0?'Even':(v>0?'Right ':'Left ')+Math.abs(v)+'%';}
+};
+var outs={fLen:'oLen',fThick:'oThick',fCurve:'oCurve',fPoint:'oPoint',fSplay:'oSplay',fTilt:'oTilt',jaw:'oJaw',lift:'oLift',drop:'oDrop',corners:'oCorners',width:'oWidth',sneer:'oSneer'};
+function readouts(){ Object.keys(outs).forEach(function(id){ $(outs[id]).textContent=fmt[id]($(id).value); }); }
+function clearPreset(){ document.querySelectorAll('[data-preset]').forEach(function(b){b.setAttribute('aria-pressed','false');}); }
+function readFangs(){
+  state.on=$('fangsOn').checked; state.uC=$('pUC').checked; state.uL=$('pUL').checked; state.uI=$('pUI').checked; state.lC=$('pLC').checked;
+  state.len=$('fLen').value/10; state.thick=$('fThick').value/100; state.curve=$('fCurve').value/100; state.point=$('fPoint').value/100;
+  state.splay=+$('fSplay').value; state.tilt=+$('fTilt').value;
+  $('fangFields').disabled=!state.on; $('fangState').textContent=state.on?'On':'Off';
+  readouts(); buildTeeth();
+}
+['fLen','fThick','fCurve','fPoint','fSplay','fTilt'].forEach(function(id){ $(id).addEventListener('input',function(){clearPreset();readFangs();}); });
+['pUC','pUL','pUI','pLC'].forEach(function(id){ $(id).addEventListener('change',function(){clearPreset();readFangs();}); });
+$('fangsOn').addEventListener('change',readFangs);
+var POSE_IDS=['jaw','lift','drop','corners','width','sneer'];
+function clearPose(){ document.querySelectorAll('[data-pose]').forEach(function(b){b.setAttribute('aria-pressed','false');}); }
+function readPose(){
+  state.jaw=+$('jaw').value; state.lift=$('lift').value/10; state.drop=$('drop').value/10;
+  state.corners=$('corners').value/10; state.width=$('width').value/10; state.sneer=$('sneer').value/100;
+  readouts(); pose();
+}
+POSE_IDS.forEach(function(id){ $(id).addEventListener('input',function(){ clearPose(); readPose(); }); });
+/* jaw degrees, lip lift mm, lip drop mm, corners mm, width mm, sneer % */
+var POSES={closed:[0,0,0,0,0,0],parted:[5,1,0.5,0,0,0],smile:[0,0,0,5,4,0],grin:[5,5,3,6.5,6,0],frown:[0,0,0,-6.5,-1,0],
+  sneer:[2,6,0,0,1,80],snarl:[8,10.5,2.5,-2.5,2,0],bared:[13,6,3,0,0,0],hiss:[27,8.5,5.5,1,3,0]};
+document.querySelectorAll('[data-pose]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var v=POSES[btn.dataset.pose];
+    POSE_IDS.forEach(function(id,i){ $(id).value=v[i]; });
+    clearPose(); btn.setAttribute('aria-pressed','true'); readPose();
+  });
+});
+$('skinOn').addEventListener('change',function(){ state.skin=this.checked; showSkin(); });
+$('resetView').addEventListener('click',function(){ camera.position.copy(HOME); controls.target.copy(TARGET); controls.update(); });
+
+var PRESETS={
+  classic:{uC:1,uL:0,uI:0,lC:0,len:19,thick:100,curve:35,point:60,splay:4,tilt:0},
+  subtle:{uC:1,uL:0,uI:0,lC:0,len:13,thick:95,curve:20,point:50,splay:2,tilt:0},
+  rat:{uC:0,uL:0,uI:1,lC:0,len:24,thick:70,curve:15,point:88,splay:0,tilt:4},
+  feral:{uC:1,uL:1,uI:0,lC:1,len:23,thick:112,curve:55,point:72,splay:8,tilt:6}
+};
+document.querySelectorAll('[data-preset]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var p=PRESETS[btn.dataset.preset];
+    $('fangsOn').checked=true;
+    $('pUC').checked=!!p.uC; $('pUL').checked=!!p.uL; $('pUI').checked=!!p.uI; $('pLC').checked=!!p.lC;
+    $('fLen').value=p.len; $('fThick').value=p.thick; $('fCurve').value=p.curve; $('fPoint').value=p.point; $('fSplay').value=p.splay; $('fTilt').value=p.tilt;
+    clearPreset(); btn.setAttribute('aria-pressed','true'); readFangs();
+  });
+});
+
+/* ---------- sizing and loop ---------- */
+function resize(){
+  var w=stage.clientWidth, h=stage.clientHeight; if(!w||!h) return;
+  renderer.setSize(w,h,false); camera.aspect=w/h;
+  camera.fov=w/h<0.9?42:30; camera.updateProjectionMatrix();
+}
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize',resize);
+resize(); showSkin(); readouts();
+(function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
+})();
+</script>
+</body>
+</html>
