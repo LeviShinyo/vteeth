@@ -153,8 +153,11 @@ legend{padding:0;color:var(--muted);font-size:12px;margin-bottom:8px}
   </aside>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- 3D engine: a local copy in lib/ so the page works offline; falls back to the online copy if lib/ is missing -->
+<script src="lib/three.min.js"></script>
+<script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
+<script src="lib/OrbitControls.js"></script>
+<script>(window.THREE&&THREE.OrbitControls)||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>')</script>
 <script>
 (function(){
 'use strict';
@@ -205,7 +208,8 @@ var tongueMat=new THREE.MeshPhysicalMaterial({color:lin('#b04a58'),roughness:0.4
 var lipMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.34,clearcoat:0.35,clearcoatRoughness:0.35});
 var skinMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.62});
 var mucosaMat=new THREE.MeshStandardMaterial({color:lin('#7a2a36'),roughness:0.5,side:THREE.BackSide});
-var voidMat=new THREE.MeshBasicMaterial({color:lin('#1d0609'),side:THREE.BackSide});
+/* dark backdrop for the inside of the mouth: drawn first and never hides anything, so the tongue and lower teeth stay visible when the jaw swings open */
+var voidMat=new THREE.MeshBasicMaterial({color:lin('#1d0609'),side:THREE.BackSide,depthWrite:false});
 
 /* ---------- dental arch (half ellipse, measured by arc length, units = cm) ---------- */
 function makeArch(a,b){
@@ -359,6 +363,7 @@ addMesh(lowerGroup,domeGeo(lowerArch,LOWER_GUM_Y-0.55,-0.3),palateMat,false);
 
 var cavTop=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),voidMat); cavTop.scale.set(3.3,2.2,4.0); cavTop.position.set(0,-0.1,0.6); scene.add(cavTop);
 var cavLow=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),voidMat); cavLow.scale.set(3.0,1.7,3.8); cavLow.position.set(0,-1.3,0.7); lowerGroup.add(cavLow);
+cavTop.renderOrder=cavLow.renderOrder=-1;
 
 /* ---------- teeth (rebuilt whenever the fang settings change) ---------- */
 var state={on:true,uC:true,uL:false,uI:false,lC:false,len:1.9,thick:1,curve:0.35,point:0.6,splay:4,tilt:0,jaw:13,lift:0.6,drop:0.3,corners:0,width:0,sneer:0,skin:true};
