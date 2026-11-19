@@ -254,6 +254,7 @@ function layout(table,arch){
   return {teeth:out,bounds:bounds};
 }
 var upperLay=layout(UPPER,upperArch), lowerLay=layout(LOWER,lowerArch);
+upperLay.front=UPPER[0][2]/2; lowerLay.front=LOWER[0][2]/2; /* front faces line up with the central incisors */
 
 var TOOTH_NECK=lin('#e3d2b0'), TOOTH_BODY=lin('#f3ecdd'), TOOTH_EDGE=lin('#d7dad8'), TC=new THREE.Color();
 /* ---------- one tooth: stacked superellipse rings from root to tip ---------- */
@@ -264,7 +265,7 @@ function toothGeo(kind,w,t,len,f){
     var y=root-v*tot, u=Math.max(0,(v*tot-root)/len);
     var hx,hz,zo=0,n=2.4;
     if(kind==='incisor'){
-      n=3;
+      n=2.6;
       hx=w/2*(0.86+0.14*sstep(0,0.45,u))*(u>0.9?1-0.14*Math.pow((u-0.9)/0.1,2):1);
       hz=Math.max(0.045,t/2*(1-0.82*Math.pow(u,1.2)));
       zo=0.05*Math.sin(PI*u);
@@ -386,7 +387,8 @@ cavTop.renderOrder=cavLow.renderOrder=-1;
 /* ---------- teeth (rebuilt whenever the fang settings change) ---------- */
 var state={on:true,uC:true,uL:false,uI:false,lC:false,len:1.9,thick:1,curve:0.35,point:0.6,splay:4,tilt:0,jaw:13,lift:0.6,drop:0.3,corners:0,width:0,sneer:0,skin:true};
 var toothMeshes=[];
-var FIT={incisor:1.10,canine:1.08,molar:1.05}; /* >1 = teeth slightly wider than their slot, so neighbours touch like real teeth */
+var FIT={incisor:1.10,canine:1.08,molar:1.05};
+var LEAN=[{incisor:11,canine:5},{incisor:6,canine:3}]; /* degrees forward: upper row, lower row */ /* >1 = teeth slightly wider than their slot, so neighbours touch like real teeth */
 function buildTeeth(){
   var i;
   for(i=0;i<toothMeshes.length;i++){ toothMeshes[i].parent.remove(toothMeshes[i]); toothMeshes[i].geometry.dispose(); }
@@ -395,20 +397,26 @@ function buildTeeth(){
     lay.teeth.forEach(function(t){
       var fang=state.on && (upper ? ((t.idx===2&&state.uC)||(t.idx===1&&state.uL)||(t.idx===0&&state.uI)) : (t.idx===2&&state.lC));
       [-1,1].forEach(function(side){
-        var p=arch.at(side*t.s), geo;
+        var p=arch.at(side*t.s), geo, half=t.t/2;
         if(fang){
           var L=Math.max(t.len,upper?state.len:state.len*0.55);
           geo=toothGeo('fang',t.w*FIT.canine,Math.max(t.t,0.66),L,state);
+          half=state.thick*Math.max(t.t,0.66)/2*0.95;
         }else geo=toothGeo(t.kind,t.w*FIT[t.kind],t.t,t.len,null);
         var m=new THREE.Mesh(geo,toothMat);
         m.castShadow=true; m.receiveShadow=true;
-        m.position.set(p.x,gumY,p.z);
+        /* slide the tooth in or out so its front face sits on a smooth curve, like a real dental arch */
+        var shift=lay.front-half;
+        m.position.set(p.x+p.nx*shift,gumY,p.z+p.nz*shift);
         m.rotation.order='YZX';
         m.rotation.y=Math.atan2(p.nx,p.nz);
+        var flip=upper?1:-1;
         if(fang){
-          var flip=upper?1:-1;
           m.rotation.z=THREE.MathUtils.degToRad(state.splay)*side*flip;
           m.rotation.x=-THREE.MathUtils.degToRad(state.tilt)*flip;
+        }else{
+          /* natural forward lean of front teeth, so the row reads as one smooth curve from the side */
+          m.rotation.x=-THREE.MathUtils.degToRad(LEAN[upper?0:1][t.kind]||0)*flip;
         }
         if(!upper) m.scale.y=-1;
         parent.add(m); toothMeshes.push(m);
