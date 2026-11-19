@@ -58,6 +58,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .check:has(input:checked){border-color:var(--accent);background:rgba(200,50,63,.10)}
 .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .presets.three{grid-template-columns:1fr 1fr 1fr}
+.presets.three button{padding:8px 4px;white-space:nowrap;font-size:13px}
 button{font:inherit;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer;text-align:center}
 button:hover{border-color:var(--muted)}
 button[aria-pressed=true]{border-color:var(--accent);color:var(--bone);background:rgba(200,50,63,.14)}
@@ -103,16 +104,17 @@ legend{padding:0;color:var(--muted);font-size:12px;margin-bottom:8px}
             <label class="check"><input type="checkbox" id="pLC">Lower canines</label>
           </div>
         </div>
-        <div class="row"><label for="fLen">Length</label><output id="oLen" for="fLen"></output><input type="range" id="fLen" min="9.5" max="40" step="0.5" value="19"></div>
-        <div class="row"><label for="fThick">Thickness</label><output id="oThick" for="fThick"></output><input type="range" id="fThick" min="60" max="140" step="1" value="100"></div>
-        <div class="row"><label for="fCurve">Backward curve</label><output id="oCurve" for="fCurve"></output><input type="range" id="fCurve" min="0" max="100" step="1" value="35"></div>
-        <div class="row"><label for="fPoint">Point</label><output id="oPoint" for="fPoint"></output><input type="range" id="fPoint" min="0" max="100" step="1" value="60"></div>
-        <div class="row"><label for="fSplay">Splay outward</label><output id="oSplay" for="fSplay"></output><input type="range" id="fSplay" min="-10" max="25" step="0.5" value="4"></div>
-        <div class="row"><label for="fTilt">Forward tilt</label><output id="oTilt" for="fTilt"></output><input type="range" id="fTilt" min="-10" max="25" step="0.5" value="0"></div>
+        <div class="row"><label for="fLen">Length</label><output id="oLen" for="fLen"></output><input type="range" id="fLen" min="9.5" max="40" step="0.5" value="14"></div>
+        <div class="row"><label for="fThick">Thickness</label><output id="oThick" for="fThick"></output><input type="range" id="fThick" min="60" max="140" step="1" value="112"></div>
+        <div class="row"><label for="fCurve">Backward curve</label><output id="oCurve" for="fCurve"></output><input type="range" id="fCurve" min="0" max="100" step="1" value="10"></div>
+        <div class="row"><label for="fPoint">Point</label><output id="oPoint" for="fPoint"></output><input type="range" id="fPoint" min="0" max="100" step="1" value="55"></div>
+        <div class="row"><label for="fSplay">Splay outward</label><output id="oSplay" for="fSplay"></output><input type="range" id="fSplay" min="-10" max="25" step="0.5" value="2"></div>
+        <div class="row"><label for="fTilt">Forward tilt</label><output id="oTilt" for="fTilt"></output><input type="range" id="fTilt" min="-10" max="25" step="0.5" value="3"></div>
         <div>
           <legend>Presets</legend>
-          <div class="presets">
-            <button type="button" data-preset="classic" aria-pressed="true">Classic</button>
+          <div class="presets three">
+            <button type="button" data-preset="natural" aria-pressed="true">Natural</button>
+            <button type="button" data-preset="classic" aria-pressed="false">Classic</button>
             <button type="button" data-preset="subtle" aria-pressed="false">Subtle</button>
             <button type="button" data-preset="rat" aria-pressed="false">Rat-toothed</button>
             <button type="button" data-preset="feral" aria-pressed="false">Feral</button>
@@ -147,6 +149,15 @@ legend{padding:0;color:var(--muted);font-size:12px;margin-bottom:8px}
       <div class="head">
         <span>Lips and skin</span>
         <label class="switch"><span id="skinState">Shown</span><input type="checkbox" id="skinOn" checked><span class="track"></span></label>
+      </div>
+      <div>
+        <legend>Lip colour</legend>
+        <div class="presets">
+          <button type="button" data-lips="natural" aria-pressed="true">Natural</button>
+          <button type="button" data-lips="rose" aria-pressed="false">Rose</button>
+          <button type="button" data-lips="berry" aria-pressed="false">Berry</button>
+          <button type="button" data-lips="crimson" aria-pressed="false">Crimson</button>
+        </div>
       </div>
       <button type="button" id="resetView">Reset camera</button>
     </section>
@@ -189,27 +200,27 @@ controls.target.copy(TARGET);
 controls.enableDamping=true; controls.dampingFactor=0.08;
 controls.enablePan=false; controls.minDistance=7; controls.maxDistance=45;
 
-scene.add(new THREE.HemisphereLight(0xfff1e6,0x2a1216,0.55));
+scene.add(new THREE.HemisphereLight(0xfff1e6,0x3a1a1e,0.65));
 var key=new THREE.DirectionalLight(0xfff4ea,1.15);
-key.position.set(4,9,16); key.castShadow=true;
+key.position.set(3,5.5,18); key.castShadow=true;
 key.shadow.mapSize.set(2048,2048);
 key.shadow.camera.left=-8; key.shadow.camera.right=8; key.shadow.camera.top=8; key.shadow.camera.bottom=-8;
 key.shadow.camera.near=1; key.shadow.camera.far=45;
-key.shadow.bias=-0.0006; key.shadow.normalBias=0.03; key.shadow.radius=3;
+key.shadow.bias=-0.0006; key.shadow.normalBias=0.03; key.shadow.radius=7;
 scene.add(key);
 var fill=new THREE.DirectionalLight(0xc8d4ff,0.28); fill.position.set(-10,-2,8); scene.add(fill);
 var rim=new THREE.DirectionalLight(0xff9a8a,0.25); rim.position.set(0,-8,6); scene.add(rim);
 
 /* ---------- materials ---------- */
-var toothMat=new THREE.MeshPhysicalMaterial({color:lin('#efe5d0'),roughness:0.22,metalness:0,clearcoat:0.7,clearcoatRoughness:0.25});
-var gumMat=new THREE.MeshPhysicalMaterial({color:lin('#b24e5b'),roughness:0.35,clearcoat:0.5,clearcoatRoughness:0.3,side:THREE.DoubleSide});
+var toothMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.26,metalness:0,clearcoat:0.55,clearcoatRoughness:0.2});
+var gumMat=new THREE.MeshPhysicalMaterial({color:lin('#d47c84'),roughness:0.38,clearcoat:0.5,clearcoatRoughness:0.3,side:THREE.DoubleSide});
 var palateMat=new THREE.MeshStandardMaterial({color:lin('#93414d'),roughness:0.5,side:THREE.DoubleSide});
-var tongueMat=new THREE.MeshPhysicalMaterial({color:lin('#b04a58'),roughness:0.42,clearcoat:0.35,clearcoatRoughness:0.4});
-var lipMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.34,clearcoat:0.35,clearcoatRoughness:0.35});
+var tongueMat=new THREE.MeshPhysicalMaterial({color:lin('#c25f69'),roughness:0.45,clearcoat:0.35,clearcoatRoughness:0.4});
+var lipMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.42,clearcoat:0.25,clearcoatRoughness:0.4});
 var skinMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.62});
 var mucosaMat=new THREE.MeshStandardMaterial({color:lin('#7a2a36'),roughness:0.5,side:THREE.BackSide});
 /* dark backdrop for the inside of the mouth: drawn first and never hides anything, so the tongue and lower teeth stay visible when the jaw swings open */
-var voidMat=new THREE.MeshBasicMaterial({color:lin('#1d0609'),side:THREE.BackSide,depthWrite:false});
+var voidMat=new THREE.MeshBasicMaterial({color:lin('#4a1820'),side:THREE.BackSide,depthWrite:false});
 
 /* ---------- dental arch (half ellipse, measured by arc length, units = cm) ---------- */
 function makeArch(a,b){
@@ -228,9 +239,9 @@ function makeArch(a,b){
 var upperArch=makeArch(2.7,4.4), lowerArch=makeArch(2.5,4.05);
 
 /* tooth tables: kind, width, labio-lingual thickness, visible crown length */
-var UPPER=[['incisor',0.86,0.70,0.90],['incisor',0.66,0.60,0.80],['canine',0.76,0.80,0.96],['molar',0.70,0.90,0.84],['molar',0.68,0.92,0.84],['molar',1.02,1.08,0.84],['molar',0.96,1.04,0.82]];
+var UPPER=[['incisor',0.86,0.70,1.06],['incisor',0.66,0.60,0.94],['canine',0.78,0.80,1.00],['molar',0.70,0.90,0.84],['molar',0.68,0.92,0.84],['molar',1.02,1.08,0.84],['molar',0.96,1.04,0.82]];
 var LOWER=[['incisor',0.54,0.56,0.90],['incisor',0.60,0.58,0.90],['canine',0.70,0.74,0.92],['molar',0.70,0.82,0.76],['molar',0.72,0.86,0.75],['molar',1.06,1.00,0.73],['molar',1.00,0.98,0.72]];
-var UPPER_GUM_Y=0.90, LOWER_GUM_Y=-0.75;
+var UPPER_GUM_Y=0.78, LOWER_GUM_Y=-0.98;
 
 function layout(table,arch){
   var sum=0,i; for(i=0;i<table.length;i++) sum+=table[i][1];
@@ -244,9 +255,10 @@ function layout(table,arch){
 }
 var upperLay=layout(UPPER,upperArch), lowerLay=layout(LOWER,lowerArch);
 
+var TOOTH_NECK=lin('#e3d2b0'), TOOTH_BODY=lin('#f3ecdd'), TOOTH_EDGE=lin('#d7dad8'), TC=new THREE.Color();
 /* ---------- one tooth: stacked superellipse rings from root to tip ---------- */
 function toothGeo(kind,w,t,len,f){
-  var R=28,S=24,root=0.4,tot=root+len,pos=[],idx=[],i,j;
+  var R=28,S=24,root=0.4,tot=root+len,pos=[],idx=[],col=[],i,j;
   for(i=0;i<=R;i++){
     var last=(i===R), v=last?1:i/(R-1);
     var y=root-v*tot, u=Math.max(0,(v*tot-root)/len);
@@ -265,21 +277,26 @@ function toothGeo(kind,w,t,len,f){
       var cap=u<0.72?1:Math.sqrt(1-0.8*Math.pow((u-0.72)/0.28,2));
       hx=w/2*(0.82+0.18*sstep(0,0.4,u))*cap;
       hz=t/2*(0.84+0.16*sstep(0,0.4,u))*cap;
-    }else{ /* fang */
-      n=2.1;
-      var tipLen=Math.min(len*0.9,0.55+1.1*f.point), q=Math.min(1,(1-u)*len/tipLen), uu=1-q;
-      var taper=Math.pow(1-Math.pow(uu,2.6-1.2*f.point),0.55+0.5*f.point);
-      var body=0.86+0.18*sstep(0,0.28,u*len)-0.06*sstep(0.3,1,u);
+    }else{ /* fang: a full-width canine crown whose sides run in near-straight lines to the point */
+      n=2.5;
+      var shoulder=0.30+0.25*(1-f.point);              /* where the taper starts: lower = longer, sharper point */
+      var uu=Math.max(0,(u-shoulder)/(1-shoulder));      /* 0 at shoulder, 1 at tip */
+      var ex=0.65+0.75*f.point;                          /* <1 rounded sides, 1 straight, >1 needle-like */
+      var taper=Math.pow(1-uu,ex);
+      var body=0.84+0.20*sstep(0,0.25,u);
       hx=f.thick*w/2*body*taper;
-      hz=f.thick*t/2*body*taper*(1-0.10*u);
-      zo=-f.curve*len*u*u*0.55;
+      hz=f.thick*t/2*body*Math.pow(1-uu,ex*0.8)*(1-0.25*u); /* flatter front face toward the tip */
+      zo=-f.curve*len*u*u*0.55 + 0.04*Math.sin(PI*u);
     }
     if(v*tot<root){ var k=0.8+0.2*(v*tot/root); hx*=k; hz*=k; }
     if(last){ hx=0; hz=0; }
     var e=2/n;
+    TC.copy(TOOTH_NECK).lerp(TOOTH_BODY,sstep(0,0.35,u));
+    if(kind!=='molar') TC.lerp(TOOTH_EDGE,0.55*sstep(0.82,1,u));
     for(j=0;j<S;j++){
       var ph=2*PI*j/S;
       pos.push(hx*spow(Math.cos(ph),e), y, hz*spow(Math.sin(ph),e)+zo);
+      col.push(TC.r,TC.g,TC.b);
     }
   }
   for(i=0;i<R;i++) for(j=0;j<S;j++){
@@ -288,6 +305,7 @@ function toothGeo(kind,w,t,len,f){
   }
   var g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
   g.setIndex(idx); g.computeVertexNormals();
   return g;
 }
@@ -379,7 +397,7 @@ function buildTeeth(){
         var p=arch.at(side*t.s), geo;
         if(fang){
           var L=Math.max(t.len,upper?state.len:state.len*0.55);
-          geo=toothGeo('fang',Math.min(t.w,0.74),Math.max(t.t,0.66),L,state);
+          geo=toothGeo('fang',t.w,Math.max(t.t,0.66),L,state);
         }else geo=toothGeo(t.kind,t.w,t.t,t.len,null);
         var m=new THREE.Mesh(geo,toothMat);
         m.castShadow=true; m.receiveShadow=true;
@@ -416,39 +434,39 @@ function faceZ(x,y){
   }
   return z;
 }
+var skinMode=new Uint8Array(NA*K), skinMix=new Float32Array(NA*K);
 var skinGeo=new THREE.BufferGeometry(), skinRest=new Float32Array(NA*K*3), skinMeta=new Float32Array(NA*K*3), skinCW=new Float32Array(NA*K);
 (function(){
-  var col=new Float32Array(NA*K*3), cSkin=lin('#cfbcb4'), cRosy=lin('#c29a95'), cLip=lin('#7e2633'), cIn=lin('#561520'), tmp=new THREE.Color();
+  var col=new Float32Array(NA*K*3);
   var j,k,m,o;
   for(j=0;j<NA;j++){
     var al=2*PI*j/NA, ca=Math.cos(al), sa=Math.sin(al), up=sa>=0, s=Math.abs(sa);
     var Ax=LW*ca, Ay=YL+0.015*sa, Bx=FW*ca, By=YL+(up?FU:FD)*sa;
     var dx=Bx-Ax, dy=By-Ay, D=Math.hypot(dx,dy); dx/=D; dy/=D;
-    var lw=up ? 0.68*Math.pow(s,0.55)*(1-0.22*Math.exp(-Math.pow(Ax/0.3,2))+0.10*Math.exp(-Math.pow((Math.abs(Ax)-0.8)/0.45,2)))
-              : 0.92*Math.pow(s,0.5);
+    var lw=up ? 0.60*Math.pow(s,0.55)*(1-0.22*Math.exp(-Math.pow(Ax/0.3,2))+0.10*Math.exp(-Math.pow((Math.abs(Ax)-0.8)/0.45,2)))
+              : 0.80*Math.pow(s,0.5);
     lw=Math.max(0.04,lw);
-    var Lt=0.03+(up?0.40:0.50)*Math.pow(s,0.45);
+    var Lt=0.03+(up?0.34:0.42)*Math.pow(s,0.45);
     var sideSign=up?1:-1, swLip=Math.pow(s,0.7), wjLip=Math.pow(s,0.55), soft=s*s*(3-2*s);
-    function put(kk,x,y,z,fall,c,far,dist){
+    function put(kk,x,y,z,fall,mode,mix,far,dist){
       skinCW[j*K+kk]=Math.pow(Math.abs(ca),2.2)*Math.exp(-dist/2.4);
       var sw=swLip+(soft-swLip)*far, wj=up?0:wjLip+(soft-wjLip)*far;
       o=(j*K+kk)*3;
       skinRest[o]=x; skinRest[o+1]=y; skinRest[o+2]=z;
       skinMeta[o]=sideSign*sw*fall; skinMeta[o+1]=wj; skinMeta[o+2]=up?1:0;
-      col[o]=c.r; col[o+1]=c.g; col[o+2]=c.b;
+      skinMode[j*K+kk]=mode; skinMix[j*K+kk]=mix;
     }
     for(k=0;k<=NL;k++){
       var ph=PH0+(PI-PH0)*k/NL, back=ph<0;
       var off=lw*(1-Math.cos(ph))/2*(back?0.6:1), zb=Lt*Math.sin(ph)*(back?0.7:1);
       var x=Ax+dx*off, y=Ay+dy*off;
-      if(back) tmp.copy(cIn); else tmp.copy(cIn).lerp(cLip,sstep(0,0.55,ph));
-      if(k===NL) tmp.copy(cLip).lerp(cRosy,0.6);
-      put(k,x,y,faceZ(x,y)+zb,1,tmp,0,off);
+      /* mode 0: inner lining blending into lip colour; mode 1: lip edge blending into skin */
+      if(k===NL) put(k,x,y,faceZ(x,y)+zb,1,1,0.6,0,off);
+      else put(k,x,y,faceZ(x,y)+zb,1,0,back?0:sstep(0,0.55,ph),0,off);
     }
     for(m=1;m<=NSK;m++){
       var f=Math.pow(m/NSK,1.5), d=lw+(D-lw)*f, x2=Ax+dx*d, y2=Ay+dy*d;
-      tmp.copy(cRosy).lerp(cSkin,sstep(0,0.5,d-lw));
-      put(NL+m,x2,y2,faceZ(x2,y2),Math.exp(-(d-lw)/1.7),tmp,sstep(0,1.4,d-lw),d);
+      put(NL+m,x2,y2,faceZ(x2,y2),Math.exp(-(d-lw)/1.7),2,sstep(0,0.5,d-lw),sstep(0,1.4,d-lw),d);
     }
   }
   var lipIdx=[],skinIdx=[];
@@ -464,6 +482,25 @@ var skinGeo=new THREE.BufferGeometry(), skinRest=new Float32Array(NA*K*3), skinM
 })();
 var skinFront=new THREE.Mesh(skinGeo,[lipMat,skinMat]); skinFront.castShadow=true; skinFront.receiveShadow=true; scene.add(skinFront);
 var skinBack=new THREE.Mesh(skinGeo,[mucosaMat,mucosaMat]); scene.add(skinBack);
+
+/* lip colour choices: lip, inner lining, and the soft blush where lip meets skin */
+var LIP_COLOURS={
+  natural:{lip:'#c46f78',inner:'#9c4652',rosy:'#d6aaa6'},
+  rose:   {lip:'#d0566a',inner:'#9a3343',rosy:'#d5a2a2'},
+  berry:  {lip:'#8f2f48',inner:'#5e1a2c',rosy:'#c79c9d'},
+  crimson:{lip:'#7e2633',inner:'#561520',rosy:'#c29a95'}
+};
+var SKIN_COLOUR=lin('#d9c6be');
+function paintLips(name){
+  var p=LIP_COLOURS[name], cL=lin(p.lip), cI=lin(p.inner), cR=lin(p.rosy), c=new THREE.Color(), col=skinGeo.attributes.color.array, i;
+  for(i=0;i<NA*K;i++){
+    var m=skinMode[i], f=skinMix[i];
+    if(m===0) c.copy(cI).lerp(cL,f); else if(m===1) c.copy(cL).lerp(cR,f); else c.copy(cR).lerp(SKIN_COLOUR,f);
+    col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+  }
+  skinGeo.attributes.color.needsUpdate=true;
+}
+paintLips('natural');
 
 function poseSkin(){
   var pos=skinGeo.attributes.position.array, th=THREE.MathUtils.degToRad(state.jaw), c=Math.cos(th), s=Math.sin(th);
@@ -553,6 +590,7 @@ $('skinOn').addEventListener('change',function(){ state.skin=this.checked; showS
 $('resetView').addEventListener('click',function(){ camera.position.copy(HOME); controls.target.copy(TARGET); controls.update(); });
 
 var PRESETS={
+  natural:{uC:1,uL:0,uI:0,lC:0,len:14,thick:112,curve:10,point:55,splay:2,tilt:3},
   classic:{uC:1,uL:0,uI:0,lC:0,len:19,thick:100,curve:35,point:60,splay:4,tilt:0},
   subtle:{uC:1,uL:0,uI:0,lC:0,len:13,thick:95,curve:20,point:50,splay:2,tilt:0},
   rat:{uC:0,uL:0,uI:1,lC:0,len:24,thick:70,curve:15,point:88,splay:0,tilt:4},
@@ -567,6 +605,14 @@ document.querySelectorAll('[data-preset]').forEach(function(btn){
     clearPreset(); btn.setAttribute('aria-pressed','true'); readFangs();
   });
 });
+
+document.querySelectorAll('[data-lips]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('[data-lips]').forEach(function(b){b.setAttribute('aria-pressed','false');});
+    btn.setAttribute('aria-pressed','true'); paintLips(btn.dataset.lips);
+  });
+});
+readFangs(); readPose(); /* start from whatever the controls say */
 
 /* ---------- sizing and loop ---------- */
 function resize(){
